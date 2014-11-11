@@ -1,8 +1,10 @@
+# vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4:
 import os
 import urllib
 import urllib2
 from sys import argv
 import time
+
 
 def text2voicefile(text, fichero): # Dado un texto, te lo guarda en audio en un fichero.
 	texturl = urllib.quote_plus(text)   
@@ -24,45 +26,40 @@ def get_google_voice(phrase):
 	return response
 
 def findcharmax(cadena, longitudma, caracter): # busca el caracter mas a la derecha sin pasarse del longitudma
-	cont = longitudma 
-	if len(cadena) < longitudma:
-                 return -1
-	for i in reversed(cadena[0:longitudma + 1]):
-		if i == caracter:
-			return cont
-		cont -= 1
+    cont = longitudma 
+    if len(cadena) < longitudma:
         return -1
-
+    for i in reversed(cadena[0:longitudma + 1]):
+        if i == caracter:
+            return cont
+        cont -= 1
+    return -1
 
 def dividesentence(parrafo, maxlength, frases):
-	if len(parrafo) < maxlength:
-		frases.append(parrafo) # Si la frase cabe, la pone 
-		return frases
-	else:
-		punto = findcharmax(parrafo, maxlength, ".")
-	        if punto > -1:
-			frases.append(parrafo[0:punto+1]) # Anade la primera mitad
-			return dividesentence(parrafo[punto + 1:len(parrafo)-1], maxlength, frases) # Resuelve el problema para la segunda mitad 
-		else:
-			coma = findcharmax(parrafo, maxlength, ",")
-	        	if coma > -1:
-				frases.append(parrafo[0:coma+1]) # Anade la primera mitad
-                        	return dividesentence(parrafo[coma + 1:len(parrafo)-1], maxlength, frases) # Resuelve el problema para la segunda mitad
-			else:
-				espacio = findcharmax(parrafo, maxlength, " ")
-		        	if espacio > -1:
-					frases.append(parrafo[0:espacio])
-					return dividesentence(parrafo[espacio + 1:len(parrafo)-1], maxlength, frases) #llamada recursiva espacio
-				else:
-					frases.append(parrafo[0:maxlength])
-					return dividesentence(parrafo[maxlength + 1:len(parrafo)-1], maxlength, frases) #llamada recursiva maxlength
+    if len(parrafo) < maxlength:
+        frases.append(parrafo) # Si la frase cabe, la pone 
+        return frases
+    characters = ".", ",", " "
+
+    for character in characters: #go through all characters
+        position = findcharmax(parrafo, maxlength, character)
+        if position > -1:
+            frases.append(parrafo[0:position])
+            return dividesentence(parrafo[position + 1:len(parrafo)-1], maxlength, frases) #llamada recursiva position 
+    
+    frases.append(parrafo[0:maxlength])
+    return dividesentence(parrafo[maxlength + 1:len(parrafo)-1], maxlength, frases) #llamada recursiva maxlength
+
+    
+
+
 
 script, fichero = argv
 text = open(fichero).read()
 parrafos = text.split('*')
 cont = 0
 
-for i in reversed(parrafos):
+for i in parrafos:
 	frases = dividesentence(i, 100, [])
 	with open("Audio" + str(cont) + ".mp3", 'wb') as file:
 		for j in frases:
